@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>info.magnolia.demo</groupId>
+    <artifactId>travel-demo-parent</artifactId>
+    <version>6.3.4</version>
+  </parent>
+
+  <artifactId>travel-demo-community-webapp</artifactId>
+  <packaging>war</packaging>
+
+  <name>Magnolia Community demo webapp</name>
+  <description>Magnolia Community webapp with the travel demo.</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>info.magnolia.bundle</groupId>
+      <artifactId>magnolia-community-webapp</artifactId>
+      <type>war</type>
+    </dependency>
+    <dependency>
+      <groupId>info.magnolia.bundle</groupId>
+      <artifactId>magnolia-community-webapp</artifactId>
+      <type>pom</type>
+    </dependency>
+
+    <!-- Version managed in ui-project (which is indirectly imported) -->
+    <dependency>
+      <groupId>info.magnolia.sample</groupId>
+      <artifactId>magnolia-sample-app</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>info.magnolia.demo</groupId>
+      <artifactId>magnolia-travel-demo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>info.magnolia.demo</groupId>
+      <artifactId>magnolia-travel-tours</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>get-tomcat</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>info.magnolia.tomcat.barebone</groupId>
+                  <artifactId>magnolia-tomcat-barebone</artifactId>
+                  <version>${tomcatBareboneVersion}</version>
+                  <type>tar.gz</type>
+                </artifactItem>
+              </artifactItems>
+              <outputDirectory>${basedir}/target/extracted-tomcat</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- inhibit default-assembly! -->
+            <id>default-assembly</id>
+            <configuration>
+              <skipAssembly>true</skipAssembly>
+            </configuration>
+          </execution>
+          <execution>
+            <id>bundle-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <skipAssembly>false</skipAssembly>
+              <finalName>travel-demo-community-webapp-${project.version}</finalName>
+              <descriptors>
+                <descriptor>src/release/tomcat-bundle.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.basepom.maven</groupId>
+        <artifactId>duplicate-finder-maven-plugin</artifactId>
+        <configuration>
+          <ignoredClassPatterns combine.self="override" /> <!-- Don't inherit ignored patterns from parent: we want to scan all classes -->
+          <exceptions>
+            <exception>
+              <!-- DEV-2119 magnolia-ui-vaadin-common-widgets contains duplicates from vaadin-server and ckeditor -->
+              <conflictingDependencies>
+                <dependency>
+                  <groupId>info.magnolia.ui</groupId>
+                  <artifactId>magnolia-ui-vaadin-common-widgets</artifactId>
+                </dependency>
+                <dependency>
+                  <groupId>org.vaadin.alump</groupId>
+                  <artifactId>ckeditor</artifactId>
+                </dependency>
+                <dependency>
+                  <groupId>com.vaadin</groupId>
+                  <artifactId>vaadin-server</artifactId>
+                </dependency>
+              </conflictingDependencies>
+            </exception>
+            <exception>
+              <!-- DEV-2120 These come through the ui-framework and the magnolia-ui-framework-compatibility. -->
+              <!-- There are duplicate but different classes, which potentially causes problems. -->
+              <conflictingDependencies>
+                <dependency>
+                  <groupId>info.magnolia.vaadin.addons</groupId>
+                  <artifactId>vaadin-compatibility-aceeditor</artifactId>
+                </dependency>
+                <dependency>
+                  <groupId>org.vaadin.addons</groupId>
+                  <artifactId>aceeditor</artifactId>
+                </dependency>
+              </conflictingDependencies>
+            </exception>
+          </exceptions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

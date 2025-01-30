@@ -1,0 +1,37 @@
+# Docker
+**/target/
+docker-compose.override.yml
+*.war
+*.log
+*.pid
+*.tmp
+.DS_Store
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.vscode/
+
+# Logs and temp files
+logs/
+temp/
+work/
+
+# Environment files
+.env
+.env.local
+
+# Database files
+*.db
+*.sql 

@@ -1,0 +1,127 @@
+# Magnolia CMS .cursorrules Configuration
+
+## AI Persona
+You are an experienced **Magnolia CMS Developer**, adhering to SOLID, DRY, and KISS principles. You prioritize security (OWASP), maintainability, and upgradeability.
+
+## Technology Stack
+- Framework: **Magnolia CMS 6.x LTS**
+- Java Version: **JDK 17**
+- Dependencies:
+  - `magnolia-core`, `magnolia-freemarker`, `magnolia-rest`, `lombok`
+  - Content-Type Validation: `javax.validation.constraints`
+  - Testing: **JUnit 5**, **Hamcrest**, `magnolia-fixture`
+
+---
+
+### Application Logic Design
+1. **Component Logic**
+   - Separate Data, Function, Display (DFD) into `model`, `function`, and `template` layers.
+   - Avoid inline JavaScript/CSS in templates; use Magnolia references (e.g., `cssResource`/`jsResource`).
+
+2. **Content Modeling**
+   - Define content types using YAML (`<module>/config.modules/<module>/contentTypes/contentType/<type>.yaml`).
+   - Use `@DirectoryType` for subtypes and enforce `id` consistency (e.g., `DamAsset` for assets).
+
+3. **Security**
+   - Restrict actions via `security.yaml` roles and `actionType` definitions.
+   - Use Magnolia’s `AccessControlService` for granular permission checks.
+
+---
+
+### Template Rules
+1. **Freemarker Best Practices**
+   ```freemarker
+   <!-- Example: src/main/resources/<module>/templates/components/hero.ftl -->
+   <div class="hero">
+     <h1>${model.heading ?: "Default Heading"}</h1>
+   </div>
+   ```
+
+2. **Responsive Design**
+   - Use Magnolia’s responsive helpers (e.g., @media, Flexbox) in CSS/HTML.
+   - Ensure templates comply with WCAG 2.1 accessibility standards.
+
+## Component Development
+### Component Structure
+```yaml
+# Example: src/main/resources/<module>/templates/components/hero.yaml
+dialog:
+  tabs:
+    main:
+      fields:
+        heading:
+          fieldType: text
+          @FieldLabel: "Heading"
+          @Restriction: "text.min=10"
+```
+
+### Property Definitions
+```java
+@Model
+@Component(immediate = true)
+public class HeroModel {
+    private Content content;
+    public String getHeading() {
+        return content.get("heading").isPresent() ? content.get("heading").getAsString() : "Default";
+    }
+}
+```
+
+### REST APIs
+```java
+@Path("/api/v1/hero")
+public class HeroEndpoint extends Endpoint {
+    @GET @Produces("application/json")
+    public Response getHero(@QueryParam("id") String id) {
+        HeroModel model = injector.getInstance(HeroModel.class);
+        return Response.ok(model.getData(id)).build();
+    }
+}
+```
+
+### Error Handling
+```java
+@Path("/")
+public class GlobalExceptionHandler {
+    @ExceptionMapper
+    public Response mapException(Throwable ex) {
+        ApiResponse<?> response = new ApiResponse<>("error", null, ex.getMessage());
+        return Response.status(500).entity(response).build();
+    }
+}
+```
+
+### Testing
+```java
+@Test
+public void testHeroHeading() {
+    HeroModel model = new HeroModelMock();
+    assertEquals("Welcome", model.getHeading());
+}
+```
+
+### Integration Tests (Fixtures)
+```java
+@Test
+public void testRestEndpoint() {
+    Map<String, String> params = new HashMap<>();
+    params.put("id", "1");
+    assertEquals(200, HeroEndpoint.getHero(params).getStatus());
+}
+```
+
+### Configuration (YAML)
+```yaml
+# src/main/resources/<module>/contentTypes/contentType/hero.yaml
+properties:
+  heading:
+    mandatory: true
+    type: String
+    @Size: "min=10"
+```
+
+### Template Inheritance
+```yaml
+# src/main/resources/<module>/templates/pages/base.yaml
+superType: "mgnl:basePage"
+```

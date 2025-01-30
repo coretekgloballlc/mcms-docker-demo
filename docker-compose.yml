@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  magnolia-author:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - JAVA_OPTS=-Xms1024m -Xmx3072m
+    volumes:
+      - magnolia-data:/opt/magnolia/apache-tomcat/webapps
+      - magnolia-logs:/opt/magnolia/apache-tomcat/logs
+      - magnolia-light-modules:/opt/magnolia/light-modules
+    depends_on:
+      - postgres
+
+  magnolia-public:
+    build: .
+    ports:
+      - "8081:8080" 
+    environment:
+      - JAVA_OPTS=-Xms1024m -Xmx3072m
+    volumes:
+      - magnolia-public-data:/opt/magnolia/apache-tomcat/webapps
+      - magnolia-logs:/opt/magnolia/logs
+      - magnolia-light-modules:/opt/magnolia/light-modules
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:14
+    environment:
+      - POSTGRES_DB=magnolia
+      - POSTGRES_USER=magnolia
+      - POSTGRES_PASSWORD=magnolia
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  magnolia-data:
+  magnolia-public-data:
+  magnolia-logs:
+  magnolia-public-logs:
+  magnolia-light-modules:
+  postgres-data: 
